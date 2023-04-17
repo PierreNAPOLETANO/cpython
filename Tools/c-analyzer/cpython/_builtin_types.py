@@ -145,15 +145,11 @@ class BuiltinTypeDecl(namedtuple('BuiltinTypeDecl', 'file lno name kind')):
 
     @property
     def private(self):
-        if not self.name.startswith('_'):
-            return False
-        return self.api and not self.internal
+        return self.api and not self.internal if self.name.startswith('_') else False
 
     @property
     def public(self):
-        if self.kind != 'capi':
-            return False
-        return not self.internal and not self.private
+        return False if self.kind != 'capi' else not self.internal and not self.private
 
 
 class BuiltinTypeInfo(namedtuple('BuiltinTypeInfo', 'file lno name static decl')):
@@ -189,31 +185,23 @@ class BuiltinTypeInfo(namedtuple('BuiltinTypeInfo', 'file lno name static decl')
 
     @property
     def api(self):
-        if not self.decl:
-            return False
-        return self.decl.api
+        return self.decl.api if self.decl else False
 
     @property
     def internal(self):
-        if not self.decl:
-            return False
-        return self.decl.internal
+        return self.decl.internal if self.decl else False
 
     @property
     def private(self):
-        if not self.decl:
-            return False
-        return self.decl.private
+        return self.decl.private if self.decl else False
 
     @property
     def public(self):
-        if not self.decl:
-            return False
-        return self.decl.public
+        return self.decl.public if self.decl else False
 
     @property
     def inmodule(self):
-        return self.relfile.startswith('Modules' + os.path.sep)
+        return self.relfile.startswith(f'Modules{os.path.sep}')
 
     def render_rowvalues(self, kinds):
         row = {
