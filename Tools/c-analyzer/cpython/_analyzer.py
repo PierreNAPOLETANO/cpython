@@ -147,9 +147,8 @@ def analyze(filenames, *,
         known,
         analyze_resolved=analyze_resolved,
     )
-    analysis = Analysis.from_results(results)
 
-    return analysis
+    return Analysis.from_results(results)
 
 
 def iter_decls(filenames, **kwargs):
@@ -174,10 +173,7 @@ def analyze_resolved(resolved, decl, types, knowntypes, extra=None):
 
     typedeps = resolved
     if typedeps is _info.UNKNOWN:
-        if decl.kind in (KIND.STRUCT, KIND.UNION):
-            typedeps = [typedeps] * len(decl.members)
-        else:
-            typedeps = [typedeps]
+        typedeps = [typedeps] * len(decl.members) if decl.kind in (KIND.STRUCT, KIND.UNION) else [typedeps]
     #assert isinstance(typedeps, (list, TypeDeclaration)), typedeps
 
     if extra is None:
