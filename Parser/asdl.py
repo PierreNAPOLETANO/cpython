@@ -79,7 +79,7 @@ class Field(AST):
         else:
             extra = ""
 
-        return "{}{} {}".format(self.type, extra, self.name)
+        return f"{self.type}{extra} {self.name}"
 
     def __repr__(self):
         if self.seq:
@@ -88,10 +88,7 @@ class Field(AST):
             extra = ", opt=True"
         else:
             extra = ""
-        if self.name is None:
-            return 'Field({0.type}{1})'.format(self, extra)
-        else:
-            return 'Field({0.type}, {0.name}{1})'.format(self, extra)
+        return 'Field({0.type}{1})'.format(self, extra) if self.name is None else 'Field({0.type}, {0.name}{1})'.format(self, extra)
 
 class Sum(AST):
     def __init__(self, types, attributes=None):
@@ -99,10 +96,7 @@ class Sum(AST):
         self.attributes = attributes or []
 
     def __repr__(self):
-        if self.attributes:
-            return 'Sum({0.types}, {0.attributes})'.format(self)
-        else:
-            return 'Sum({0.types})'.format(self)
+        return 'Sum({0.types}, {0.attributes})'.format(self) if self.attributes else 'Sum({0.types})'.format(self)
 
 class Product(AST):
     def __init__(self, fields, attributes=None):
@@ -110,10 +104,7 @@ class Product(AST):
         self.attributes = attributes or []
 
     def __repr__(self):
-        if self.attributes:
-            return 'Product({0.fields}, {0.attributes})'.format(self)
-        else:
-            return 'Product({0.fields})'.format(self)
+        return 'Product({0.fields}, {0.attributes})'.format(self) if self.attributes else 'Product({0.fields})'.format(self)
 
 # A generic visitor for the meta-AST that describes ASDL. This can be used by
 # emitters. Note that this visitor does not provide a generic visit method, so a
@@ -168,8 +159,8 @@ class Check(VisitorBase):
         if conflict is None:
             self.cons[key] = name
         else:
-            print('Redefinition of constructor {}'.format(key))
-            print('Defined in {} and {}'.format(conflict, name))
+            print(f'Redefinition of constructor {key}')
+            print(f'Defined in {conflict} and {name}')
             self.errors += 1
         for f in cons.fields:
             self.visit(f, key)
@@ -272,9 +263,7 @@ class ASDLParser:
         if self._at_keyword('module'):
             self._advance()
         else:
-            raise ASDLSyntaxError(
-                'Expected "module" (found {})'.format(self.cur_token.value),
-                self.cur_token.lineno)
+            raise ASDLSyntaxError('Expected "module" (found {})'.format(self.cur_token.value),self.cur_token.lineno)
         name = self._match(self._id_kinds)
         self._match(TokenKind.LBrace)
         defs = self._parse_definitions()
@@ -296,14 +285,11 @@ class ASDLParser:
             return self._parse_product()
         else:
             # Otherwise it's a sum. Look for ConstructorId
-            sumlist = [Constructor(self._match(TokenKind.ConstructorId),
-                                   self._parse_optional_fields())]
+            sumlist = [Constructor(self._match(TokenKind.ConstructorId), self._parse_optional_fields())]
             while self.cur_token.kind  == TokenKind.Pipe:
                 # More constructors
                 self._advance()
-                sumlist.append(Constructor(
-                                self._match(TokenKind.ConstructorId),
-                                self._parse_optional_fields()))
+                sumlist.append(Constructor(self._match(TokenKind.ConstructorId), self._parse_optional_fields()))
             return Sum(sumlist, self._parse_optional_attributes())
 
     def _parse_product(self):
@@ -315,8 +301,7 @@ class ASDLParser:
         while self.cur_token.kind == TokenKind.TypeId:
             typename = self._advance()
             is_seq, is_opt = self._parse_optional_field_quantifier()
-            id = (self._advance() if self.cur_token.kind in self._id_kinds
-                                  else None)
+            id = (self._advance() if self.cur_token.kind in self._id_kinds else None)
             fields.append(Field(typename, id, seq=is_seq, opt=is_opt))
             if self.cur_token.kind == TokenKind.RParen:
                 break
@@ -326,10 +311,7 @@ class ASDLParser:
         return fields
 
     def _parse_optional_fields(self):
-        if self.cur_token.kind == TokenKind.LParen:
-            return self._parse_fields()
-        else:
-            return None
+        return self._parse_fields() if self.cur_token.kind == TokenKind.LParen else None
 
     def _parse_optional_attributes(self):
         if self._at_keyword('attributes'):
@@ -369,17 +351,12 @@ class ASDLParser:
         * Returns the value of the current token
         * Reads in the next token
         """
-        if (isinstance(kind, tuple) and self.cur_token.kind in kind or
-            self.cur_token.kind == kind
-            ):
+        if (isinstance(kind, tuple) and self.cur_token.kind in kind or self.cur_token.kind == kind):
             value = self.cur_token.value
             self._advance()
             return value
         else:
-            raise ASDLSyntaxError(
-                'Unmatched {} (found {})'.format(kind, self.cur_token.kind),
-                self.cur_token.lineno)
+            raise ASDLSyntaxError('Unmatched {} (found {})'.format(kind, self.cur_token.kind),self.cur_token.lineno)
 
     def _at_keyword(self, keyword):
-        return (self.cur_token.kind == TokenKind.TypeId and
-                self.cur_token.value == keyword)
+        return (self.cur_token.kind == TokenKind.TypeId and self.cur_token.value == keyword)
