@@ -816,10 +816,7 @@ def _fscodec():
         'mbcs' (which is the default encoding).
         """
         filename = fspath(filename)  # Does type-checking of `filename`.
-        if isinstance(filename, str):
-            return filename.encode(encoding, errors)
-        else:
-            return filename
+        return filename.encode(encoding, errors) if isinstance(filename, str) else filename
 
     def fsdecode(filename):
         """Decode filename (an os.PathLike, bytes, or str) from the filesystem
@@ -828,10 +825,7 @@ def _fscodec():
         'mbcs' (which is the default encoding).
         """
         filename = fspath(filename)  # Does type-checking of `filename`.
-        if isinstance(filename, bytes):
-            return filename.decode(encoding, errors)
-        else:
-            return filename
+        return filename.decode(encoding, errors) if isinstance(filename, bytes) else filename
 
     return fsencode, fsdecode
 
@@ -1012,10 +1006,7 @@ if sys.platform != 'vxworks':
             returncode = self._proc.wait()
             if returncode == 0:
                 return None
-            if name == 'nt':
-                return returncode
-            else:
-                return returncode << 8  # Shift left to match old behavior
+            return returncode if name == 'nt' else returncode << 8
         def __enter__(self):
             return self
         def __exit__(self, *args):
