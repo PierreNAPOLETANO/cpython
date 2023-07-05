@@ -667,14 +667,8 @@ class HTMLDoc(Doc):
         name, path, ispackage, shadowed = modpkginfo
         if shadowed:
             return self.grey(name)
-        if path:
-            url = '%s.%s.html' % (path, name)
-        else:
-            url = '%s.html' % name
-        if ispackage:
-            text = '<strong>%s</strong>&nbsp;(package)' % name
-        else:
-            text = name
+        url = '%s.%s.html' % (path, name) if path else '%s.html' % name
+        text = '<strong>%s</strong>&nbsp;(package)' % name if ispackage else name
         return '<a href="%s">%s</a>' % (url, text)
 
     def filelink(self, url, path):
@@ -990,12 +984,7 @@ class HTMLDoc(Doc):
 
         contents = ''.join(contents)
 
-        if name == realname:
-            title = '<a name="%s">class <strong>%s</strong></a>' % (
-                name, realname)
-        else:
-            title = '<strong>%s</strong> = <a name="%s">class %s</a>' % (
-                name, name, realname)
+        title = '<a name="%s">class <strong>%s</strong></a>' % (name, realname) if name == realname else '<strong>%s</strong> = <a name="%s">class %s</a>' % (name, name, realname)
         if bases:
             parents = []
             for base in bases:
@@ -1038,17 +1027,9 @@ class HTMLDoc(Doc):
                 if imclass is not cl:
                     note = ' from ' + self.classlink(imclass, mod)
             else:
-                if object.__self__ is not None:
-                    note = ' method of %s instance' % self.classlink(
-                        object.__self__.__class__, mod)
-                else:
-                    note = ' unbound %s method' % self.classlink(imclass,mod)
+                note = ' method of %s instance' % self.classlink(object.__self__.__class__, mod) if object.__self__ is not None else ' unbound %s method' % self.classlink(imclass,mod)
 
-        if (inspect.iscoroutinefunction(object) or
-                inspect.isasyncgenfunction(object)):
-            asyncqualifier = 'async '
-        else:
-            asyncqualifier = ''
+        asyncqualifier = 'async ' if (inspect.iscoroutinefunction(object) or inspect.isasyncgenfunction(object)) else ''
 
         if name == realname:
             title = '<a name="%s"><strong>%s</strong></a>' % (anchor, realname)
@@ -1471,17 +1452,9 @@ location listed above.
                 if imclass is not cl:
                     note = ' from ' + classname(imclass, mod)
             else:
-                if object.__self__ is not None:
-                    note = ' method of %s instance' % classname(
-                        object.__self__.__class__, mod)
-                else:
-                    note = ' unbound %s method' % classname(imclass,mod)
+                note = ' method of %s instance' % classname(object.__self__.__class__, mod) if object.__self__ is not None else ' unbound %s method' % classname(imclass,mod)
 
-        if (inspect.iscoroutinefunction(object) or
-                inspect.isasyncgenfunction(object)):
-            asyncqualifier = 'async '
-        else:
-            asyncqualifier = ''
+        asyncqualifier = 'async ' if (inspect.iscoroutinefunction(object) or inspect.isasyncgenfunction(object)) else ''
 
         if name == realname:
             title = self.bold(realname)
@@ -2261,10 +2234,7 @@ class ModuleScanner:
                             onerror(modname)
                         continue
                     desc = source_synopsis(io.StringIO(source)) or ''
-                    if hasattr(loader, 'get_filename'):
-                        path = loader.get_filename(modname)
-                    else:
-                        path = None
+                    path = loader.get_filename(modname) if hasattr(loader, 'get_filename') else None
                 else:
                     try:
                         module = importlib._bootstrap._load(spec)
@@ -2364,15 +2334,11 @@ def _start_server(urlhandler, hostname, port):
             The URL received is in self.path.
             Get an HTML page from self.urlhandler and send it.
             """
-            if self.path.endswith('.css'):
-                content_type = 'text/css'
-            else:
-                content_type = 'text/html'
+            content_type = 'text/css' if self.path.endswith('.css') else 'text/html'
             self.send_response(200)
             self.send_header('Content-Type', '%s; charset=UTF-8' % content_type)
             self.end_headers()
-            self.wfile.write(self.urlhandler(
-                self.path, content_type).encode('utf-8'))
+            self.wfile.write(self.urlhandler(self.path, content_type).encode('utf-8'))
 
         def log_message(self, *args):
             # Don't log messages.
@@ -2593,10 +2559,8 @@ def _url_handler(url, content_type="text/html"):
         buf = io.StringIO()
         htmlhelp = Helper(buf, buf)
         contents, xrefs = htmlhelp._gettopic(topic)
-        if topic in htmlhelp.keywords:
-            title = 'KEYWORD'
-        else:
-            title = 'TOPIC'
+
+        title = 'KEYWORD' if topic in htmlhelp.keywords else 'TOPIC'
         heading = html.heading(
             '<strong class="title">%s</strong>' % title,
         )

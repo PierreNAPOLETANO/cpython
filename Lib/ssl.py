@@ -612,10 +612,7 @@ class SSLContext(_SSLContext):
             Raw, decrypted message content as bytes
         """
         inner = super()._msg_callback
-        if inner is not None:
-            return inner.user_function
-        else:
-            return None
+        return inner.user_function if inner is not None else return None
 
     @_msg_callback.setter
     def _msg_callback(self, callback):
@@ -1068,12 +1065,10 @@ class SSLSocket(socket):
         if self._sslobj is None:
             raise ValueError("Read on closed or unwrapped SSL socket.")
         try:
-            if buffer is not None:
-                return self._sslobj.read(len, buffer)
-            else:
-                return self._sslobj.read(len)
+            return self._sslobj.read(len, buffer) if buffer is not None else self._sslobj.read(len)
         except SSLError as x:
             if x.args[0] == SSL_ERROR_EOF and self.suppress_ragged_eofs:
+                return 0 
                 if buffer is not None:
                     return 0
                 else:
@@ -1109,34 +1104,22 @@ class SSLSocket(socket):
     @_sslcopydoc
     def selected_alpn_protocol(self):
         self._checkClosed()
-        if self._sslobj is None or not _ssl.HAS_ALPN:
-            return None
-        else:
-            return self._sslobj.selected_alpn_protocol()
+        return None if self._sslobj is None or not _ssl.HAS_ALPN else self._sslobj.selected_alpn_protocol()
 
     @_sslcopydoc
     def cipher(self):
         self._checkClosed()
-        if self._sslobj is None:
-            return None
-        else:
-            return self._sslobj.cipher()
+        return None if self._sslobj is None else self._sslobj.cipher()
 
     @_sslcopydoc
     def shared_ciphers(self):
         self._checkClosed()
-        if self._sslobj is None:
-            return None
-        else:
-            return self._sslobj.shared_ciphers()
+        return None if self._sslobj is None else self._sslobj.shared_ciphers()
 
     @_sslcopydoc
     def compression(self):
         self._checkClosed()
-        if self._sslobj is None:
-            return None
-        else:
-            return self._sslobj.compression()
+        return None if self._sslobj is None else return self._sslobj.compression()
 
     def send(self, data, flags=0):
         self._checkClosed()
@@ -1185,11 +1168,7 @@ class SSLSocket(socket):
         """Send a file, possibly by using os.sendfile() if this is a
         clear-text socket.  Return the total number of bytes sent.
         """
-        if self._sslobj is not None:
-            return self._sendfile_use_send(file, offset, count)
-        else:
-            # os.sendfile() works with plain sockets only
-            return super().sendfile(file, offset, count)
+        return self._sendfile_use_send(file, offset, count) if self._sslobj is not None else super().sendfile(file, offset, count)
 
     def recv(self, buflen=1024, flags=0):
         self._checkClosed()
@@ -1244,10 +1223,7 @@ class SSLSocket(socket):
     @_sslcopydoc
     def pending(self):
         self._checkClosed()
-        if self._sslobj is not None:
-            return self._sslobj.pending()
-        else:
-            return 0
+        return self._sslobj.pending() if self._sslobj is not None else 0
 
     def shutdown(self, how):
         self._checkClosed()
@@ -1297,11 +1273,7 @@ class SSLSocket(socket):
             owner=self, session=self._session
         )
         try:
-            if connect_ex:
-                rc = super().connect_ex(addr)
-            else:
-                rc = None
-                super().connect(addr)
+            rc = super().connect_ex(addr) if connect_ex else None
             if not rc:
                 self._connected = True
                 if self.do_handshake_on_connect:
@@ -1346,10 +1318,7 @@ class SSLSocket(socket):
 
     @_sslcopydoc
     def version(self):
-        if self._sslobj is not None:
-            return self._sslobj.version()
-        else:
-            return None
+        return self._sslobj.version() if self._sslobj is not None else return None
 
 
 # Python does not support forward declaration of types.
@@ -1425,10 +1394,7 @@ def get_server_certificate(addr, ssl_version=PROTOCOL_TLS_CLIENT,
     """
 
     host, port = addr
-    if ca_certs is not None:
-        cert_reqs = CERT_REQUIRED
-    else:
-        cert_reqs = CERT_NONE
+    cert_reqs = CERT_REQUIRED if ca_certs is not None else CERT_NONE
     context = _create_stdlib_context(ssl_version,
                                      cert_reqs=cert_reqs,
                                      cafile=ca_certs)
