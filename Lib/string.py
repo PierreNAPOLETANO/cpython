@@ -92,12 +92,8 @@ class Template:
     def _invalid(self, mo):
         i = mo.start('invalid')
         lines = self.template[:i].splitlines(keepends=True)
-        if not lines:
-            colno = 1
-            lineno = 1
-        else:
-            colno = i - len(''.join(lines[:-1]))
-            lineno = len(lines)
+        colno = 1 if not lines else i - len(''.join(lines[:-1]))
+        lineno = 1 if not lines else len(lines)
         raise ValueError('Invalid placeholder in string: line %d, col %d' %
                          (lineno, colno))
 
@@ -295,15 +291,10 @@ class Formatter:
     #  args, kwargs: as passed in to vformat
     def get_field(self, field_name, args, kwargs):
         first, rest = _string.formatter_field_name_split(field_name)
-
         obj = self.get_value(first, args, kwargs)
 
         # loop through the rest of the field_name, doing
         #  getattr or getitem as needed
         for is_attr, i in rest:
-            if is_attr:
-                obj = getattr(obj, i)
-            else:
-                obj = obj[i]
-
+            obj = getattr(obj, i) if is_attr else obj[i]
         return obj, first
